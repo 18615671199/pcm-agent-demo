@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>质量检查</title>
+<style>
+:root{--navy:#0C2237;--navy2:#11304F;--blue:#1B5CB8;--blue2:#2E6FD1;--bg:#F2F5F9;--card:#FFF;--line:#E3E9F1;--ink:#1F2D3D;--ink2:#5A6B7F;--ink3:#93A1B3;--red:#D93843;--redbg:#FDEDEE;--grn:#189A46;--grnbg:#E8F6EE;--orn:#E07B0A;--orngbg:#FDF3E3}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+.wrap{padding:16px 20px 28px}
+.hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.hd-bar{width:4px;height:22px;background:var(--blue);border-radius:2px}
+.hd h1{font-size:17px;color:var(--navy);letter-spacing:1px}
+.hd span{font-size:11px;color:var(--ink3);background:#fff;border:1px solid var(--line);padding:3px 9px;border-radius:99px;margin-left:auto}
+.demo-banner{background:linear-gradient(135deg,#FFF8E1,#FFECB3);border:1px solid #F9D47A;border-left:4px solid var(--orn);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#7A4F00;display:flex;align-items:center;gap:8px}
+.demo-banner .demo-icon{font-size:16px}.demo-banner b{color:#7A4F00}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;position:relative}
+.st::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue);border-radius:10px 0 0 10px}
+.st.r::before{background:var(--red)}.st.g::before{background:var(--grn)}.st.o::before{background:var(--orn)}
+.st .lbl{font-size:11px;color:var(--ink3)}.st .num{font-family:"Consolas",monospace;font-size:22px;font-weight:700;margin-top:2px}
+.pane{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.pane-h{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:#FBFDFF}
+.pane-h h3{font-size:13px;color:var(--navy)}
+.pane-h .btns{margin-left:auto;display:flex;gap:8px}
+.inp-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}
+.inp-row label{font-size:11px;color:var(--ink3);display:block;margin-bottom:4px}
+.inp-row input,.inp-row select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;background:#fff;outline:none}
+.inp-row input:focus,.inp-row select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(27,92,184,.12)}
+.btns{padding:0 14px 14px;display:flex;gap:10px}
+.btn-ai{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--blue),#7C5CD6);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(30,80,180,.3)}
+.btn-ai:disabled{opacity:.6;cursor:not-allowed}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink2);border-radius:7px;padding:8px 14px;font-size:12.5px;cursor:pointer}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:#F7F9FC;color:var(--ink2);font-weight:600;text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11.5px;white-space:nowrap}
+tbody td{padding:8px 12px;border-bottom:1px solid #EDF1F6;vertical-align:top}
+tbody tr:hover{background:#FAFBFD}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:600}
+.tag.r{background:var(--redbg);color:var(--red);border:1px solid #F5C9CC}
+.tag.g{background:var(--grnbg);color:var(--grn);border:1px solid #B7EB8F}
+.tag.o{background:var(--orngbg);color:var(--orn);border:1px solid #F3DCBC}
+.empty{text-align:center;padding:30px;color:var(--ink3);font-size:12.5px}
+.progress-wrap{padding:20px 24px;background:#F8FAFC}
+.progress-title{font-size:12px;color:var(--ink2);margin-bottom:14px;font-weight:600}
+.step-list{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink2);padding:8px 12px;border-radius:8px;background:#fff;border:1px solid var(--line);transition:all .25s}
+.step.done{border-color:#B7EB8F;background:#F6FFED;color:var(--grn)}
+.step.active{border-color:var(--blue);background:#E8F1FD;color:var(--blue);box-shadow:0 0 0 2px rgba(27,92,184,.12)}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--ink3);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step.done .step-num{background:var(--grn);color:#fff}
+.step.active .step-num{background:var(--blue);color:#fff}
+.step-msg{flex:1;font-weight:500}
+.step-detail{font-size:11px;color:var(--ink3);margin-top:2px}
+.step.done .step-detail{color:rgba(24,154,70,.7)}
+.step.active .step-detail{color:rgba(27,92,184,.8)}
+.step-status{font-size:11px;color:var(--ink3)}
+.step.done .step-status{color:var(--grn)}
+.step.active .step-status{color:var(--blue)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(27,92,184,.3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin-right:6px;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-box{background:var(--redbg);border:1px solid #F5C9CC;border-radius:8px;padding:14px 18px;margin:16px 24px;color:var(--red);font-size:13px}
+.err-box .err-title{font-weight:600;margin-bottom:6px}
+.err-box .err-msg{font-size:12px;color:#8B2B32}
+.retry-btn{display:inline-flex;align-items:center;gap:5px;background:var(--red);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;margin-top:10px}
+.retry-btn:hover{background:#B02B36}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="demo-banner">
+    <span class="demo-icon">⚠️</span>
+    <span><b>演示生成内容，供人工核对</b></span>
+  </div>
+
+  <div class="hd">
+    <div class="hd-bar"></div>
+    <h1>🔧 质量检查</h1>
+  </div>
+
+  <div class="stats" id="stats" style="display:none">
+    <div class="st g"><div class="lbl">检查项总数</div><div class="num" id="s-total">-</div></div>
+    <div class="st g"><div class="lbl">合格</div><div class="num" id="s-pass" style="color:var(--grn)">-</div></div>
+    <div class="st r"><div class="lbl">不合格</div><div class="num" id="s-fail" style="color:var(--red)">-</div></div>
+    <div class="st"><div class="lbl">合格率</div><div class="num" id="s-rate">-</div></div>
+  </div>
+
+  <div class="pane">
+    <div class="pane-h"><h3>📝 作业基本信息</h3>
+      <div class="btns">
+        <button class="btn-ai" id="btnRun">✨ 开始 AI 生成检查表</button>
+        <button class="btn-ghost" onclick="loadDemo()">📄 加载演示数据</button>
+      </div>
+    </div>
+    <div class="inp-row">
+      <div><label>项目名称</label><input id="inpProject" value="双沟现状PE管更新改造工程"></div>
+      <div><label>作业类型</label>
+        <select id="inpWorkType">
+          <option>深基坑</option><option>非开挖</option><option>吊装</option><option>高处</option><option>动土</option>
+        </select>
+      </div>
+      <div><label>作业名称</label><input id="inpWorkName" value="水平定向钻穿越施工"></div>
+      <div><label>施工单位</label><input id="inpCtor" value="山东沃达建设集团"></div>
+      <div><label>检查人</label><input id="inpInsp" value="陈工"></div>
+      <div><label>检查日期</label><input id="inpDate" value="2026-11-19" type="date"></div>
+    </div>
+  </div>
+
+  <div class="pane" id="paneProgress" style="display:none">
+    <div class="pane-h"><h3>🤖 AI 生成进度</h3></div>
+    <div class="progress-wrap"><div class="progress-title">执行步骤：</div><div class="step-list" id="stepList"></div></div>
+  </div>
+
+  <div class="pane" id="paneError" style="display:none">
+    <div class="pane-h"><h3>❌ 运行失败</h3></div>
+    <div class="err-box">
+      <div class="err-title">运行出错了</div>
+      <div class="err-msg" id="errMsg">未知错误</div>
+      <button class="retry-btn" onclick="retryRun()">🔄 重新运行</button>
+    </div>
+  </div>
+
+  <div class="pane" id="paneResult" style="display:none">
+    <div class="pane-h">
+      <h3>📋 AI 生成 质量检查表</h3>
+      <button style="margin-left:auto;background:linear-gradient(135deg,var(--green),#0d6b2f);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px" onclick="exportChecklist()">⬇️ 导出检查表</button>
+    </div>
+    <div id="body" style="overflow-x:auto">
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "";
+let lastOutput = null;
+let lastPayload = null;
+const STEPS = ["解析作业输入信息","匹配历史检查表样","AI 生成 质量检查表","AI 计算 合格率统计","后处理 结果规范化"];
+
+function buildStepListHTML(){
+  return STEPS.map((msg,i)=>`
+    <div class="step" data-s="${i}">
+      <div class="step-num">${i+1}</div>
+      <div style="flex:1">
+        <div class="step-msg">${msg}</div>
+        <div class="step-detail" id="sd${i}" style="display:none"></div>
+      </div>
+      <div class="step-status">等待中</div>
+    </div>`).join("");
+}
+
+function setStep(idx, state, detail="", statusText=""){
+  const el = document.querySelector(`.step[data-s="${idx}"]`);
+  if(!el) return;
+  el.classList.remove("done","active","error"); el.classList.add(state);
+  el.querySelector(".step-status").textContent = statusText || (state==="done"?"✓ 完成":state==="active"?`<span class="spinner"></span>执行中`:"等待中");
+  const d = document.getElementById("sd"+idx);
+  if(d){ if(detail){ d.textContent = detail; d.style.display = "block"; } else { d.style.display = "none"; } }
+}
+
+function render(out){
+  if(!out) return;
+  const tbody = document.getElementById("tbody");
+  const chk = out.checklist || [];
+  const h = out.check_header || {};
+
+  // 顶部检查表信息区
+  const headerHTML = `
+    <div style="background:#FBFDFF;border-bottom:1px solid var(--line);padding:14px 18px 10px">
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px">📋 质量安全检查表</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 20px">
+        <div><span style="color:var(--ink3);font-size:11px">项目名称</span><div style="font-weight:600">${h.project||"-"}</div></div>
+        <div><span style="color:var(--ink3);font-size:11px">作业类型</span><div style="font-weight:600">${h.work_type||"-"}</div></div>
+        <div><span style="color:var(--ink3);font-size:11px">作业名称</span><div style="font-weight:600">${h.work_name||"-"}</div></div>
+        <div><span style="color:var(--ink3);font-size:11px">施工单位</span><div>${h.contractor||"-"}</div></div>
+        <div><span style="color:var(--ink3);font-size:11px">检查人</span><div>${h.inspector||"-"}</div></div>
+        <div><span style="color:var(--ink3);font-size:11px">检查日期</span><div>${h.inspect_date||"-"}</div></div>
+      </div>
+    </div>`;
+
+  let html = chk.map((r,i)=>{
+    const res = r.result || "√";
+    return `<tr>
+    <td style="text-align:center;color:var(--ink3)">${i+1}</td>
+    <td style="font-weight:600">${r.item||""}</td>
+    <td style="color:var(--ink2)">${r.standard||""}</td>
+    <td style="text-align:center"><input type="radio" name="r${i}" ${res==="√"?"checked":""} onchange="mark(this,'${i}','√')"></td>
+    <td style="text-align:center"><input type="radio" name="r${i}" ${res==="×"?"checked":""} onchange="mark(this,'${i}','×')"></td>
+    <td style="text-align:center"><input type="radio" name="r${i}" ${res==="-"?"checked":""} onchange="mark(this,'${i}','-')"></td>
+  </tr>`}).join("");
+  if(!html) html = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+  const fullHTML = headerHTML + `
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr style="background:#F7F9FC;color:var(--ink2);font-weight:600">
+        <th style="width:36px;padding:8px 12px;text-align:left">#</th>
+        <th style="padding:8px 12px;text-align:left">检查项目</th>
+        <th style="padding:8px 12px;text-align:left">检查标准</th>
+        <th style="width:100px;padding:8px 12px;text-align:center">合格</th>
+        <th style="width:100px;padding:8px 12px;text-align:center">不合格</th>
+        <th style="width:100px;padding:8px 12px;text-align:center">不适用</th>
+      </tr></thead>
+      <tbody>${html}</tbody>
+    </table>`;
+  document.getElementById("body").innerHTML = fullHTML;
+
+  const pass = chk.filter(x=>x.result==="√").length;
+  const fail = chk.filter(x=>x.result==="×").length;
+  const na = chk.filter(x=>x.result==="-").length;
+  const scored = pass+fail;
+  const rate = scored>0 ? Math.round(pass/scored*100) : (out.pass_rate||"0%");
+
+  document.getElementById("stats").style.display="grid";
+  document.getElementById("s-total").textContent = chk.length;
+  document.getElementById("s-pass").textContent = pass;
+  document.getElementById("s-fail").textContent = fail;
+  document.getElementById("s-rate").textContent = rate;
+}
+
+async function run(payload){
+  const btn = document.getElementById("btnRun");
+  btn.disabled = true; btn.textContent = "🤖 运行中...";
+  document.getElementById("paneError").style.display="none";
+  document.getElementById("paneResult").style.display="none";
+  document.getElementById("paneProgress").style.display="block";
+  document.getElementById("stepList").innerHTML = buildStepListHTML();
+
+  try{
+    const resp = await fetch(API+"/api/agents/quality-check/run/stream",{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)
+    });
+    if(!resp.ok){ throw new Error("HTTP "+resp.status); }
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, {stream:true});
+      let idx;
+      while((idx = buf.indexOf("\n\n")) !== -1){
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        parseAndHandle(chunk);
+      }
+    }
+  } catch(e){ showError("请求失败: "+e.message); }
+  btn.disabled = false; btn.textContent = "✨ 开始 AI 生成检查表";
+}
+
+function parseAndHandle(chunk){
+  let eventType = "message", dataStr = "";
+  for(const line of chunk.split("\n")){
+    if(line.startsWith("event:")) eventType = line.slice(6).trim();
+    else if(line.startsWith("data:")) dataStr += (dataStr?"\n":"") + line.slice(5).trim();
+  }
+  if(!dataStr) return;
+  let data; try{ data = JSON.parse(dataStr); } catch(e){ return; }
+
+  if(eventType==="progress"){
+    for(let i=0; i<data.step-1; i++){
+      const el = document.querySelector(`.step[data-s="${i}"]`);
+      if(el && !el.classList.contains("done")){ setStep(i, "done", "", "✓ 完成"); }
+    }
+    setStep(data.step-1, "active", data.detail||"", "执行中");
+  } else if(eventType==="llm_start"){
+    const activeStep = document.querySelector(".step.active");
+    if(activeStep){
+      const idx = activeStep.dataset.s;
+      setStep(+idx, "active", "AI 深度分析中，这步最耗时（约 30-60 秒），请耐心等待...", "🤖 AI 推理中");
+    }
+  } else if(eventType==="llm_done"){
+    const activeStep = document.querySelector(".step.active");
+    if(activeStep){
+      const idx = activeStep.dataset.s;
+      setStep(+idx, "done", `AI 推理完成 · 耗时 ${(data.duration_ms/1000).toFixed(1)}秒`, "✓ 完成");
+    }
+  } else if(eventType==="result"){
+    document.querySelectorAll(".step").forEach((el,i)=>{
+      if(!el.classList.contains("done")) setStep(i, "done", "", "✓ 完成");
+    });
+    setTimeout(()=>{
+      document.getElementById("paneProgress").style.display="none";
+      document.getElementById("paneResult").style.display="block";
+      lastOutput = data.output;
+      render(lastOutput);
+    }, 500);
+  } else if(eventType==="error"){ showError(data.message); }
+}
+
+function showError(msg){
+  document.getElementById("paneProgress").style.display="none";
+  document.getElementById("paneError").style.display="block";
+  document.getElementById("errMsg").textContent = msg;
+}
+
+function retryRun(){ if(lastPayload) run(lastPayload); }
+
+function exportChecklist(){
+  if(!lastOutput) return alert("请先点击『开始 AI 生成检查表』");
+  const chk = lastOutput.checklist || [];
+  const header = ["序号","检查项目","检查标准","检查结果"];
+  const rows = chk.map((r,i)=>[
+    i+1,
+    (r.item||"").replace(/"/g,'""'),
+    (r.standard||"").replace(/"/g,'""'),
+    ({"√":"合格","×":"不合格","-":"不适用"}[r.result]||"待填")
+  ]);
+  const csv = "\ufeff" + [header,...rows].map(row=>row.map(c=>`"${c}"`).join(",")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="质量检查表_"+new Date().toISOString().slice(0,10)+".csv"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("btnRun").onclick = () => {
+  lastPayload = {
+    project: document.getElementById("inpProject").value,
+    work_type: document.getElementById("inpWorkType").value,
+    work_name: document.getElementById("inpWorkName").value,
+    contractor: document.getElementById("inpCtor").value,
+    inspector: document.getElementById("inpInsp").value,
+    inspect_date: document.getElementById("inpDate").value
+  };
+  run(lastPayload);
+};
+
+function mark(el, row, val){ /* 可以存回全局让 render 重算 */ }
+function loadDemo(){
+  document.getElementById("inpProject").value = "双沟现状PE管更新改造工程";
+  document.getElementById("inpWorkType").value = "非开挖";
+  document.getElementById("inpWorkName").value = "水平定向钻穿越施工";
+}
+</script>
+</body>
+</html>

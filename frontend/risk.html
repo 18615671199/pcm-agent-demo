@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风险识别</title>
+<style>
+:root{--navy:#0C2237;--navy2:#11304F;--blue:#1B5CB8;--blue2:#2E6FD1;--bg:#F2F5F9;--card:#FFF;--line:#E3E9F1;--ink:#1F2D3D;--ink2:#5A6B7F;--ink3:#93A1B3;--red:#D93843;--redbg:#FDEDEE;--grn:#189A46;--grnbg:#E8F6EE;--orn:#E07B0A;--orngbg:#FDF3E3}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+.wrap{padding:16px 20px 28px}
+.hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.hd-bar{width:4px;height:22px;background:var(--blue);border-radius:2px}
+.hd h1{font-size:17px;color:var(--navy);letter-spacing:1px}
+.hd span{font-size:11px;color:var(--ink3);background:#fff;border:1px solid var(--line);padding:3px 9px;border-radius:99px;margin-left:auto}
+.demo-banner{background:linear-gradient(135deg,#FFF8E1,#FFECB3);border:1px solid #F9D47A;border-left:4px solid var(--orn);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#7A4F00;display:flex;align-items:center;gap:8px}
+.demo-banner .demo-icon{font-size:16px}
+.demo-banner b{color:#7A4F00}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;position:relative}
+.st::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue);border-radius:10px 0 0 10px}
+.st.r::before{background:var(--red)}.st.g::before{background:var(--grn)}.st.o::before{background:var(--orn)}
+.st .lbl{font-size:11px;color:var(--ink3)}.st .num{font-family:"Consolas",monospace;font-size:22px;font-weight:700;margin-top:2px}
+.pane{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.pane-h{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:#FBFDFF}
+.pane-h h3{font-size:13px;color:var(--navy)}
+.pane-h .btns{margin-left:auto;display:flex;gap:8px}
+.inp-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}
+.inp-row label{font-size:11px;color:var(--ink3);display:block;margin-bottom:4px}
+.inp-row input,.inp-row select{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;background:#fff;outline:none}
+.inp-row input:focus,.inp-row select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(27,92,184,.12)}
+.btns{padding:0 14px 14px;display:flex;gap:10px}
+.btn-ai{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--blue),#7C5CD6);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(30,80,180,.3)}
+.btn-ai:disabled{opacity:.6;cursor:not-allowed}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink2);border-radius:7px;padding:8px 14px;font-size:12.5px;cursor:pointer}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:#F7F9FC;color:var(--ink2);font-weight:600;text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11.5px;white-space:nowrap}
+tbody td{padding:8px 12px;border-bottom:1px solid #EDF1F6;vertical-align:top}
+tbody tr:hover{background:#FAFBFD}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:600}
+.tag.r{background:var(--redbg);color:var(--red);border:1px solid #F5C9CC}
+.tag.g{background:var(--grnbg);color:var(--grn);border:1px solid #B7EB8F}
+.tag.o{background:var(--orngbg);color:var(--orn);border:1px solid #F3DCBC}
+.empty{text-align:center;padding:30px;color:var(--ink3);font-size:12.5px}
+.plain{white-space:pre-wrap;font-size:12.5px;line-height:1.7;padding:12px 14px;background:#FAFBFD}
+.tabs{display:flex;border-bottom:2px solid var(--line);padding:0 14px}
+.tab{padding:9px 14px;font-size:12.5px;color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.on{color:var(--blue);font-weight:600;border-bottom-color:var(--blue)}
+.tab-body{padding:0}
+
+/* === 进度步骤 UI === */
+.progress-wrap{padding:20px 24px;background:#F8FAFC}
+.progress-title{font-size:12px;color:var(--ink2);margin-bottom:14px;font-weight:600}
+.step-list{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink2);padding:8px 12px;border-radius:8px;background:#fff;border:1px solid var(--line);transition:all .25s}
+.step.done{border-color:#B7EB8F;background:#F6FFED;color:var(--grn)}
+.step.active{border-color:var(--blue);background:#E8F1FD;color:var(--blue);box-shadow:0 0 0 2px rgba(27,92,184,.12)}
+.step.error{border-color:#F5C9CC;background:#FFF1F0;color:var(--red)}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--ink3);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step.done .step-num{background:var(--grn);color:#fff}
+.step.active .step-num{background:var(--blue);color:#fff}
+.step.error .step-num{background:var(--red);color:#fff}
+.step-msg{flex:1;font-weight:500}
+.step-detail{font-size:11px;color:var(--ink3);margin-top:2px}
+.step.done .step-detail{color:rgba(24,154,70,.7)}
+.step.active .step-detail{color:rgba(27,92,184,.8)}
+.step-status{font-size:11px;color:var(--ink3)}
+.step.done .step-status{color:var(--grn)}
+.step.active .step-status{color:var(--blue)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(27,92,184,.3);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin-right:6px;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* === 错误 + 重试 === */
+.err-box{background:var(--redbg);border:1px solid #F5C9CC;border-radius:8px;padding:14px 18px;margin:16px 24px;color:var(--red);font-size:13px}
+.err-box .err-title{font-weight:600;margin-bottom:6px}
+.err-box .err-msg{font-size:12px;color:#8B2B32}
+.retry-btn{display:inline-flex;align-items:center;gap:5px;background:var(--red);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;margin-top:10px}
+.retry-btn:hover{background:#B02B36}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 演示标识 -->
+  <div class="demo-banner">
+    <span class="demo-icon">⚠️</span>
+    <span><b>演示生成内容，供人工核对</b></span>
+  </div>
+
+  <div class="hd">
+    <div class="hd-bar"></div>
+    <h1>🧱 风险识别</h1>
+  </div>
+
+  <div class="stats" id="stats" style="display:none">
+    <div class="st r"><div class="lbl">识别风险</div><div class="num" id="s-risk">-</div></div>
+    <div class="st g"><div class="lbl">JSA 步骤</div><div class="num" id="s-jsa">-</div></div>
+    <div class="st o"><div class="lbl">LEC 最高分</div><div class="num" id="s-lec">-</div></div>
+    <div class="st"><div class="lbl">风险等级</div><div class="num" id="s-level">-</div></div>
+  </div>
+
+  <div class="pane">
+    <div class="pane-h"><h3>📝 作业基本信息</h3>
+      <div class="btns">
+        <button class="btn-ai" id="btnRun">✨ 开始 AI 风险识别</button>
+        <button class="btn-ghost" onclick="loadDemo()">📄 加载演示数据</button>
+      </div>
+    </div>
+    <div class="inp-row" style="grid-template-columns:repeat(3,1fr);gap:10px;padding:14px">
+      <div><label>项目名称</label><input id="inpProject" value="双沟现状PE管更新改造工程"></div>
+      <div><label>项目单位</label><input id="inpProjUnit" value="中能建管道工程局"></div>
+      <div><label>作业单位（施工单位）</label><input id="inpCtor" value="山东沃达建设集团"></div>
+      <div><label>作业类型</label>
+        <select id="inpWorkType">
+          <option>深基坑</option><option>非开挖</option><option>吊装</option><option>高处</option><option>动土</option>
+        </select>
+      </div>
+      <div><label>作业名称</label><input id="inpWorkName" value="水平定向钻穿越施工"></div>
+      <div style="grid-column:span 2"><label>工作任务简述（作业步骤）</label><textarea id="inpTaskDesc" rows="2" placeholder="描述本次作业的具体步骤，如：开挖管沟→下管→回填→恢复地坪...">根据消防管网动土作业设计要求，将根据设计要求开挖管沟，根据施工图要求及现场实际情况开挖，随后回填泥土，恢复地坪，结束作业。</textarea></div>
+      <div><label>作业位置</label><input id="inpLoc" value="K0+500-K0+800 段"></div>
+      <div><label>项目编号</label><input id="inpProjId" value="Z2026100002"></div>
+      <div style="grid-column:span 1"><label>作业环境（地貌、地质、地下水等）</label><input id="inpEnv" value="K0+500处穿越大庆西路繁华路段，穿越段上方有沥青路面、地下管线密集，地下水位埋深约6m，以粉土、粉质黏土为主"></div>
+      <div style="grid-column:span 2"><label>技术要求（深度、宽度、长度、穿越参数）</label><input id="inpTech" value="穿越段总长约300m，管顶埋深不小于1.5m，导向孔偏差≤0.5m，扩孔孔径≥800mm，回拖速度≤3m/min，泥浆比重1.15-1.25"></div>
+      <div style="grid-column:span 3">
+        <label>施工设备（多选）</label>
+        <div id="inpEquip" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-top:3px">
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="挖掘机" checked>挖掘机</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="定向钻机" checked>定向钻机</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="泥浆泵" checked>泥浆泵</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="起重机">起重机</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="装载机">装载机</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="推土机">推土机</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="打夯机">打夯机</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="压路机">压路机</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="潜水泵">潜水泵</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="钢板桩">钢板桩</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="脚手架">脚手架</label>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);background:#F7F9FC;border:1px solid var(--line);border-radius:6px;padding:5px 10px"><input type="checkbox" value="其他">其他</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 运行中：步骤进度区 -->
+  <div class="pane" id="paneProgress" style="display:none">
+    <div class="pane-h"><h3>🤖 AI 生成进度</h3></div>
+    <div class="progress-wrap"><div class="progress-title">执行步骤：</div><div class="step-list" id="stepList"></div></div>
+  </div>
+
+  <!-- 运行中：错误 + 重试区 -->
+  <div class="pane" id="paneError" style="display:none">
+    <div class="pane-h"><h3>❌ 运行失败</h3></div>
+    <div class="err-box">
+      <div class="err-title">运行出错了</div>
+      <div class="err-msg" id="errMsg">未知错误</div>
+      <button class="retry-btn" onclick="retryRun()">🔄 重新运行</button>
+    </div>
+  </div>
+
+  <div class="pane" id="paneResult" style="display:none">
+    <div class="tabs" id="tabs">
+      <div class="tab on" data-t="risk">① 风险辨识表</div>
+      <div class="tab" data-t="jsa">② JSA 作业安全分析（LEC 法）</div>
+      <div class="tab" data-t="ep">③ 应急预案</div>
+    </div>
+    <div class="tab-body" id="body"></div>
+  </div>
+</div>
+
+<script>
+const API = "";
+let lastOutput = null;
+let lastPayload = null;
+const STEPS = ["解析作业输入信息","匹配历史知识库","AI 生成 风险辨识表","AI 生成 JSA LEC 法","AI 生成 应急预案","后处理 LEC 自动计算"];
+
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>switchTab(t.dataset.t));
+
+function switchTab(t){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x.dataset.t===t));
+  render(lastOutput);
+}
+
+function buildStepListHTML(){
+  return STEPS.map((msg,i)=>`
+    <div class="step" data-s="${i}">
+      <div class="step-num">${i+1}</div>
+      <div style="flex:1">
+        <div class="step-msg">${msg}</div>
+        <div class="step-detail" id="sd${i}" style="display:none"></div>
+      </div>
+      <div class="step-status">等待中</div>
+    </div>`).join("");
+}
+
+function setStep(idx, state, detail="", statusText=""){
+  const el = document.querySelector(`.step[data-s="${idx}"]`);
+  if(!el) return;
+  el.classList.remove("done","active","error");
+  el.classList.add(state);
+  el.querySelector(".step-status").textContent = statusText || (state==="done"?"✓ 完成":state==="active"?`<span class="spinner"></span>执行中`:"等待中");
+  const d = document.getElementById("sd"+idx);
+  if(d){ if(detail){ d.textContent = detail; d.style.display = "block"; } else { d.style.display = "none"; } }
+}
+
+function render(out){
+  if(!out){document.getElementById("body").innerHTML='<div class="empty">AI 还没跑，请先点上方 "开始 AI 风险识别"</div>';return}
+  const cur = document.querySelector(".tab.on").dataset.t;
+  const b = document.getElementById("body");
+  if(cur==="risk"){
+    const rows = (out.risk_table||[]).map(r=>`<tr>
+      <td style="width:40px;text-align:center;color:var(--ink3)">${r.seq||""}</td>
+      <td style="font-weight:600">${r.hazard_name||""}</td>
+      <td><span class="tag ${(r.hazard_level||"").includes("重大")?"r":(r.hazard_level||"").includes("较大")?"o":"g"}">${r.hazard_level||""}</span></td>
+      <td style="color:var(--ink2)">${r.risk_cause||""}</td>
+      <td style="color:var(--ink2)">${r.prevention||""}</td>
+    </tr>`).join("");
+    b.innerHTML = `<div class="table-scroll" style="overflow-x:auto"><table><thead><tr>
+      <th style="width:40px">#</th><th>危险名称</th><th>级别</th><th>风险原因</th><th>预防措施</th>
+    </tr></thead><tbody>${rows||'<tr><td colspan="5" class="empty">暂无数据</td></tr>'}</tbody></table></div>`;
+  } else if(cur==="jsa"){
+    const h = out.jsa_header || {};
+    const f = out.jsa_type_flags || {};
+    const flagLabels = ["常规作业","临时作业","交叉作业","承包作业","办理作业许可","新(首次)作业","无操作规程作业","变更规程作业","特种作业人员作业"];
+    const flagsHTML = flagLabels.map(k=>`<label style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:2px 8px;border:1px solid var(--line);border-radius:4px;background:#F7F9FC;margin:2px 4px 2px 0"><input type="checkbox" disabled ${f[k]?"checked":""}><span>${k}</span></label>`).join("");
+    const headerHTML = `
+      <div style="background:#FBFDFF;border-bottom:1px solid var(--line);padding:14px 18px 10px">
+        <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px">📋 JSA 作业安全分析（LEC 法）</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px 20px;margin-bottom:10px">
+          <div><span style="color:var(--ink3);font-size:11px">项目名称</span><div style="font-weight:600">${h.project||"-"}</div></div>
+          <div><span style="color:var(--ink3);font-size:11px">作业类型</span><div style="font-weight:600">${h.work_type||"-"}</div></div>
+          <div><span style="color:var(--ink3);font-size:11px">作业位置</span><div style="font-weight:600">${h.work_location||"-"}</div></div>
+          <div><span style="color:var(--ink3);font-size:11px">施工单位</span><div style="font-weight:600">${h.contractor||"-"}</div></div>
+          <div><span style="color:var(--ink3);font-size:11px">作业负责组长</span><div>${h.work_leader||"<span style='color:var(--ink3)'>（待填）</span>"}</div></div>
+          <div><span style="color:var(--ink3);font-size:11px">JSA 分析人员</span><div>${h.jsa_analyst||"<span style='color:var(--ink3)'>（待填）</span>"}</div></div>
+          <div><span style="color:var(--ink3);font-size:11px">分析日期</span><div>${h.analyze_date||"-"}</div></div>
+        </div>
+        <div style="border-top:1px dashed var(--line);padding-top:8px">
+          <span style="color:var(--ink3);font-size:11px;margin-right:6px">作业类型勾选：</span>${flagsHTML}
+        </div>
+      </div>`;
+    const rows = (out.jsa_table||[]).map(r=>`<tr>
+      <td style="width:36px;text-align:center">${r.seq||""}</td>
+      <td style="font-weight:600">${r.work_step||""}</td>
+      <td>${r.hazard_factor||""}</td>
+      <td style="text-align:center">${r.likelihood||""}</td>
+      <td style="text-align:center">${r.exposure||""}</td>
+      <td style="text-align:center">${r.consequence||""}</td>
+      <td style="text-align:center;font-weight:700;color:var(--red)"><b>${r.lec_score||""}</b></td>
+      <td>${r.existing_control||""}</td>
+      <td>${r.further_improvement||""}</td>
+      <td style="text-align:center"><span class="tag ${r.remaining_risk_acceptable?"g":"o"}">${r.remaining_risk_acceptable?"可接受":"不可接受"}</span></td>
+    </tr>`).join("");
+    b.innerHTML = headerHTML + `<div class="table-scroll" style="overflow-x:auto"><table><thead><tr>
+      <th>#</th><th>工作步骤</th><th>危害因素</th><th>L</th><th>E</th><th>C</th><th>LEC</th><th>现有控制措施</th><th>改进措施</th><th>剩余风险</th>
+    </tr></thead><tbody>${rows||'<tr><td colspan="10" class="empty">暂无数据</td></tr>'}</tbody></table></div>`;
+  } else {
+    b.innerHTML = `<div class="plain">${out.emergency_plan||""}</div>`;
+  }
+  const rt = out.risk_table||[]; const jt = out.jsa_table||[];
+  document.getElementById("stats").style.display="grid";
+  document.getElementById("s-risk").textContent = rt.length;
+  document.getElementById("s-jsa").textContent = jt.length;
+  const maxLec = jt.reduce((m,r)=>Math.max(m, r.lec_score||0),0);
+  document.getElementById("s-lec").textContent = maxLec;
+  let level = "低风险";
+  if(maxLec>=160) level="高度危险"; else if(maxLec>=70) level="显著危险"; else if(maxLec>=20) level="一般危险"; else level="稍有危险";
+  document.getElementById("s-level").textContent = level;
+}
+
+async function run(payload){
+  const btn = document.getElementById("btnRun");
+  btn.disabled = true; btn.textContent = "🤖 运行中...";
+  document.getElementById("paneError").style.display="none";
+  document.getElementById("paneResult").style.display="none";
+  document.getElementById("paneProgress").style.display="block";
+  document.getElementById("stepList").innerHTML = buildStepListHTML();
+
+  try{
+    const resp = await fetch(API+"/api/agents/risk-identification/run/stream",{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)
+    });
+    if(!resp.ok){ throw new Error("HTTP "+resp.status); }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    let lastActiveStep = -1;
+
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, {stream:true});
+
+      let idx;
+      while((idx = buf.indexOf("\n\n")) !== -1){
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        parseAndHandle(chunk);
+      }
+    }
+  } catch(e){
+    showError("请求失败: "+e.message);
+  }
+  btn.disabled = false; btn.textContent = "✨ 开始 AI 风险识别";
+}
+
+function parseAndHandle(chunk){
+  let eventType = "message";
+  let dataStr = "";
+  for(const line of chunk.split("\n")){
+    if(line.startsWith("event:")) eventType = line.slice(6).trim();
+    else if(line.startsWith("data:")) dataStr += (dataStr?"\n":"") + line.slice(5).trim();
+  }
+  if(!dataStr) return;
+  let data; try{ data = JSON.parse(dataStr); } catch(e){ return; }
+
+  if(eventType==="progress"){
+    // 先把之前的 active 标 done
+    for(let i=0; i<data.step-1; i++){
+      const el = document.querySelector(`.step[data-s="${i}"]`);
+      if(el && !el.classList.contains("done")){ setStep(i, "done", "", "✓ 完成"); }
+    }
+    setStep(data.step-1, "active", data.detail||"", "执行中");
+  } else if(eventType==="tool"){
+    // 高亮当前步骤
+    // 细节可以加，但暂时用 progress 驱动
+  } else if(eventType==="llm_start"){
+    // 当前步骤设为 active 并显示 "AI 深度思考中，这步最耗时..."
+    const activeStep = document.querySelector(".step.active");
+    if(activeStep){
+      const idx = activeStep.dataset.s;
+      setStep(+idx, "active", "AI 深度思考中，这步最耗时（约 30-60 秒），请耐心等待...", "🤖 AI 推理中");
+    }
+  } else if(eventType==="llm_done"){
+    const activeStep = document.querySelector(".step.active");
+    if(activeStep){
+      const idx = activeStep.dataset.s;
+      setStep(+idx, "done", `AI 推理完成 · 耗时 ${(data.duration_ms/1000).toFixed(1)}秒`, "✓ 完成");
+    }
+  } else if(eventType==="tool_done"){
+    // pass
+  } else if(eventType==="result"){
+    // 所有未标 done 的步骤标 done
+    document.querySelectorAll(".step").forEach((el,i)=>{
+      if(!el.classList.contains("done")) setStep(i, "done", "", "✓ 完成");
+    });
+    setTimeout(()=>{
+      document.getElementById("paneProgress").style.display="none";
+      document.getElementById("paneResult").style.display="block";
+      lastOutput = data.output;
+      render(lastOutput);
+    }, 500);
+  } else if(eventType==="error"){
+    showError(data.message);
+  }
+}
+
+function showError(msg){
+  document.getElementById("paneProgress").style.display="none";
+  document.getElementById("paneError").style.display="block";
+  document.getElementById("errMsg").textContent = msg;
+}
+
+function retryRun(){ if(lastPayload) run(lastPayload); }
+
+document.getElementById("btnRun").onclick = () => {
+  const equip = Array.from(document.querySelectorAll("#inpEquip input:checked")).map(c=>c.value);
+  lastPayload = {
+    project: document.getElementById("inpProject").value,
+    project_unit: document.getElementById("inpProjUnit").value,
+    contractor: document.getElementById("inpCtor").value,
+    work_type: document.getElementById("inpWorkType").value,
+    work_name: document.getElementById("inpWorkName").value,
+    work_task_desc: document.getElementById("inpTaskDesc").value,
+    work_location: document.getElementById("inpLoc").value,
+    project_id: document.getElementById("inpProjId").value,
+    work_environment: document.getElementById("inpEnv").value,
+    technical_requirements: document.getElementById("inpTech").value,
+    equipment: equip.join("、")
+  };
+  run(lastPayload);
+};
+
+function loadDemo(){
+  document.getElementById("inpProject").value = "双沟现状PE管更新改造工程";
+  document.getElementById("inpProjUnit").value = "中能建管道工程局";
+  document.getElementById("inpCtor").value = "山东沃达建设集团";
+  document.getElementById("inpWorkType").value = "非开挖";
+  document.getElementById("inpWorkName").value = "水平定向钻穿越施工";
+  document.getElementById("inpLoc").value = "K0+500-K0+800 段";
+}
+</script>
+</body>
+</html>

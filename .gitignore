@@ -1,0 +1,39 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+*.log
+test_report.json
+test_report.md
+scripts/test_report.*
+node_modules/
+.DS_Store
+.idea/
+.vscode/
+*.bak
+*.tar.gz
+
+# Large files excluded from GitHub (>50MB)
+real_samples/
+backend/knowledge/sources/
+backend/vector_db/*.sqlite
+backend/vector_db/*.sqlite-shm
+backend/vector_db/*.sqlite-wal
+
+# Legacy build artifacts at repo root
+*.html  # except in frontend/ and 客户演示/
+backend/vector_db/
+checklist.html
+questions.html
+debug_html.py
+full_test.py
+deploy_all.py
+API_DOC.md
+Dockerfile
+_draft/
+real_samples/
+demo_test/
+公网测试/
+待*.html
