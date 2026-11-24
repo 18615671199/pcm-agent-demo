@@ -1,0 +1,29 @@
+name: PCM Agent Daily Check
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # 北京 07:00 = UTC 23:00 前一天
+  workflow_dispatch:        # 允许手动触发
+
+jobs:
+  daily-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - run: pip install requests
+      - id: test
+        run: |
+          cd scripts
+          python daily_check.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: scripts/test_report.*
+          retention-days: 30
