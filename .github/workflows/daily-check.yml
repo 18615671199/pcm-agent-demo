@@ -1,29 +1,62 @@
-name: PCM Agent Daily Check
+name: PCM Agent 每日健康检查
 
 on:
   schedule:
-    - cron: "0 23 * * *"   # 北京 07:00 = UTC 23:00 前一天
-  workflow_dispatch:        # 允许手动触发
+    - cron: "0 23 * * *"
+  workflow_dispatch:
 
 jobs:
   daily-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
+        name: Pull code
+
       - uses: actions/setup-python@v5
+        name: Setup Python
         with:
           python-version: "3.12"
           cache: "pip"
-      - run: pip install requests
-      - id: test
+
+      - name: Install deps
+        run: pip install requests
+
+      - name: Run tests
+        id: test
         run: |
           cd scripts
           python daily_check.py
-      - if: always()
+
+      - name: Upload reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: scripts/test_report.*
           retention-days: 30
+
+      - name: Send email via Resend
+        if: always()
+        run: |
+          python -c "
+          import requests, os
+          api_key = os.environ.get('RESEND_API_KEY', '')
+          if not api_key:
+              print('RESEND_API_KEY not set, skip')
+              exit(0)
+          with open('scripts/test_report.md', 'r') as f:
+              body = f.read()
+          r = requests.post('https://api.resend.com/emails',
+              headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+              json={
+                  'from': 'PCM Monitor <onboarding@resend.dev>',
+                  'to': ['chenchen@zhongshuruizhi.com'],
+                  'subject': '[PCM Cloud] Daily Report',
+                  'text': body
+              }, timeout=15)
+          print(f'Resend: {r.status_code} {r.text[:300]}')
+          "
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
