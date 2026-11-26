@@ -1,9 +1,11 @@
 #!/bin/bash
-# run_check.sh — 每日健康检查入口脚本
+# run_check.sh — 每日健康检查入口脚本（服务器本地模式）
 # 用法: run_check.sh [daily|failonly]
 #   daily    全量日报（07:00 北京，发给 3 人：chenchen + liutianfeng + zhaozhen）
 #   failonly 中间检测（15:00/23:00 北京，FAIL≥2 才发给 1 人：chenchen）
-# 退出码: 0=正常（不管发没发邮件）, 非零=脚本异常
+#
+# 服务器 crontab 调用 → 自动加 --server-local（激活自愈 + VACUUM）
+# GitHub Actions 调用 → 不加（远程模式，跳过 VACUUM）
 
 set -e
 MODE=${1:-daily}
@@ -11,14 +13,14 @@ MODE=${1:-daily}
 export PATH=$HOME/.local/node/bin:$PATH
 cd $HOME/pcm-monitor/scripts
 
-echo "=== $(date): 模式=$MODE 开始检查 ==="
+echo "=== $(date): 模式=$MODE 开始检查（服务器本地，自愈激活） ==="
 
-# 跑 daily_check.py
+# 跑 daily_check.py（服务器本地 → 加 --server-local）
+EXTRA_ARGS="--server-local"
 if [ "$MODE" = "failonly" ]; then
-    python3 daily_check.py --fail-only 2>&1 | tee ../cron_run.log || true
-else
-    python3 daily_check.py 2>&1 | tee ../cron_run.log || true
+    EXTRA_ARGS="$EXTRA_ARGS --fail-only"
 fi
+python3 daily_check.py $EXTRA_ARGS 2>&1 | tee ../cron_run.log || true
 
 # 读 ALERT_NEEDED 标记（从 markdown 报告最后一行）
 ALERT_NEEDED=$(grep '^ALERT_NEEDED=' test_report.md | tail -1 | cut -d= -f2)
